@@ -1,11 +1,9 @@
-import re
 from collections import OrderedDict
 from django.db.models import Sum, Count, F
 from rest_framework import viewsets, mixins
 
 from api.models import PerformanceMetrics
 from rest_framework import filters
-from rest_framework import response
 from api.serializers import PerformanceMetricsSerializer, PerformanceMetricsListSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -63,10 +61,10 @@ class PerformanceMetricApiView(AggregationByQueryParamMixin,
         query_params = self.request.query_params
         # for every known aggregation, we rebuild queryset
         # by values from query_params
-        queryset = self.qs_cpi(queryset=queryset, query_params=query_params)
         for aggregation, aggregation_func in self.aggregations.items():
             queryset = aggregation_func(queryset=queryset,
                                         query_params=query_params)
+        queryset = self.qs_cpi(queryset=queryset, query_params=query_params)
         return queryset
 
     def get_serializer_class(self):
@@ -80,4 +78,5 @@ class PerformanceMetricApiView(AggregationByQueryParamMixin,
     def qs_cpi(self, queryset, query_params, *args, **kwargs):
         if not query_params.get("get_cpi", False):
             return queryset
-        return queryset.annotate(cpi=F("spend") / F("installs"))
+        return queryset.annotate(spend=Sum("spend"), installs=Sum("installs"),
+                                 cpi=F("spend") / F("installs"))
