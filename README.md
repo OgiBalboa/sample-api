@@ -15,7 +15,7 @@ python manage.py runserver
 
 ## Usage
 
-You can filter, order, group, aggregate data by using query parameters with 1 end point. 
+You can filter, order, group, aggregate data by using query parameters with single end point. 
 ```
 http://localhost:8000/api/v1/performance_metrics/
 ```
@@ -37,11 +37,11 @@ Columns of dataset table are : <b>date	| channel	| country |	os |	impressions |	
 <br>You can filter any of these columns by using django orm lookups (guide link: https://docs.djangoproject.com/en/dev/ref/models/querysets/#field-lookups)<br>
 <b>Example</b>
 ```
-http://localhost:8000/api/v1/performance_metrics/?os=ios
+http://localhost:8000/api/v1/performance_metrics/?os__in=ios,android
 http://localhost:8000/api/v1/performance_metrics/?clicks__gte=1000
 ```
 ## Ordering
-You can order data by any column ( this could be limited by columns like clicks, installs, spend and revenue) by declaring <i>ordering</i> parameter in query params. For descending order add (-) to field.
+You can order data by any column (this could be limited by columns like clicks, installs, spend and revenue) by declaring <i>ordering</i> parameter in query params. For descending order add (-) to field.
 <br>
 <b>Example</b>
 ```
@@ -65,23 +65,21 @@ You can specify start_date as date__gte and end date as date__lte
 
 ## Common API use-cases
 ### 1. To Show the number of impressions and clicks that occurred before the 1st of June 2017, broken down by channel and country, sorted by clicks in descending order
-````
-```
-http://localhost:8000/api/v1/performance_metrics/?ordering=-clicks&group_by=channel&group_by=country&date__lte=2017-06-01&column=clicks&sum=clicks&column=impressions&sum=impressions
-```
-````
+```http://localhost:8000/api/v1/performance_metrics/?ordering=-clicks&group_by=channel&group_by=country&date__lte=2017-06-01&column=clicks&sum=clicks&column=impressions&sum=impressions```
+
 
 ### 2. To Show the number of installs that occurred in May of 2017 on iOS, broken down by date, sorted by date in ascending order.
-```
-http://localhost:8000/api/v1/performance_metrics/?ordering=date&group_by=date&sum=installs&date__gte=2017-05-01&os=ios&date__lte=2017-05-31&column=os
-```
+```http://localhost:8000/api/v1/performance_metrics/?ordering=date&group_by=date&sum=installs&date__gte=2017-05-01&os=ios&date__lte=2017-05-31&column=os```
 
 ### 3. To Show revenue, earned on June 1, 2017 in US, broken down by operating system and sorted by revenue in descending order.
-```
-http://localhost:8000/api/v1/performance_metrics/?ordering=-revenue&group_by=revenue&date=2017-06-01&group_by=os
-```
+```http://localhost:8000/api/v1/performance_metrics/?ordering=-revenue&group_by=revenue&date=2017-06-01&group_by=os```
 
 ### 4. To Show CPI and spend for Canada (CA) broken down by channel ordered by CPI in descending order:
-```
-http://localhost:8000/api/v1/performance_metrics/?ordering=-cpi&get_cpi=True&column=cpi&country=CA&column=country
-```
+```http://localhost:8000/api/v1/performance_metrics/?ordering=-cpi&get_cpi=True&column=channel&country=CA&column=country```
+
+## TO DO's
+* Adding a validator for query params required (to prevent data leakage)
+* Tests should be written.
+* Authentication is a must.
+* Throttling could be helpful to secure API.
+* API returns the field you aggregate even you did not specify in column params.
