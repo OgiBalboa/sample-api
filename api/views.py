@@ -14,12 +14,18 @@ class AggregationByQueryParamMixin:
 
     @property
     def aggregations(self):
-        return dict(group_by=self.qs_group_by, sum=self.qs_sum, count=self.qs_count)
+        aggregations = OrderedDict()
+        aggregations["group_by"] = self.qs_group_by
+        aggregations["count"] = self.qs_count
+        aggregations["sum"] = self.qs_sum
+        return aggregations
 
     def qs_group_by(self, queryset, query_params, *args, **kwargs):
         group_by = query_params.getlist('group_by', [])
         columns = set(query_params.getlist("column") + group_by)
-        queryset = queryset.values(*columns)
+        # exclude annotations from group_by values
+        conflicts = set(query_params.getlist("sum", []) + query_params.getlist("count", []))
+        queryset = queryset.values(*(columns-conflicts))
         return queryset
 
     def qs_sum(self, queryset, query_params, *args, **kwargs):
@@ -64,6 +70,7 @@ class PerformanceMetricApiView(AggregationByQueryParamMixin,
         return queryset
 
     def get_serializer_class(self):
+        #  allow multiple serializers for retrieve and list actions
         try:
             return self.serializer_classes[self.action]
         except KeyError:
